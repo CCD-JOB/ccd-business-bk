@@ -104,317 +104,317 @@
 import Vue from 'vue'
 import moment from 'moment'
 import {
-  addBranchOrganization,
-  showBranchAttributes,
-  uploadUrl,
-  removeBranchOrganizationHead,
-  eidtBranchOrganization,
-  showSingleBranchOrganization
+	addBranchOrganization,
+	showBranchAttributes,
+	uploadUrl,
+	removeBranchOrganizationHead,
+	eidtBranchOrganization,
+	showSingleBranchOrganization
 } from '@/api/branches'
 import { PreviewImgModal, SingleImgUpload } from '@/components'
 import { CountryCity } from './../components'
 export default {
-  components: {
-    SingleImgUpload,
-    CountryCity,
-    PreviewImgModal
-  },
-  data () {
-    return {
-      form: this.$form.createForm(this),
-      subBtnVisible: true,
-      id: '',
-      companyUrl: '',
-      examineState: 1,
-      rejectReason: '',
-      logoUrl: '',
-      branchList: [],
-      phone: [],
-      fax: [],
-      modalInfo: {
-        title: '查看大图',
-        previewVisible: false,
-        src: ''
-      },
-      uploadInfo: {
-        fileList: [],
-        showOffList: {}
-      },
-      queryParam: {
-        id: ''
-      }
-    }
-  },
-  created () {
-    const { logoUrl } = uploadUrl
-    const {
-      $route: {
-        query: { id }
-      },
-      showBranchAttributes,
-      showSingleBranchOrganization
-    } = this
+	components: {
+		SingleImgUpload,
+		CountryCity,
+		PreviewImgModal
+	},
+	data() {
+		return {
+			form: this.$form.createForm(this),
+			subBtnVisible: true,
+			id: '',
+			companyUrl: '',
+			examineState: 1,
+			rejectReason: '',
+			logoUrl: '',
+			branchList: [],
+			phone: [],
+			fax: [],
+			modalInfo: {
+				title: '查看大图',
+				previewVisible: false,
+				src: ''
+			},
+			uploadInfo: {
+				fileList: [],
+				showOffList: {}
+			},
+			queryParam: {
+				id: ''
+			}
+		}
+	},
+	created() {
+		const { logoUrl } = uploadUrl
+		const {
+			$route: {
+				query: { id }
+			},
+			showBranchAttributes,
+			showSingleBranchOrganization
+		} = this
 
-    this.logoUrl = logoUrl
-    this.id = id
-    this.companyUrl = JSON.parse(Vue.ls.get('ROLESINFO')).companyUrl
-    showBranchAttributes()
-    showSingleBranchOrganization()
-  },
-  methods: {
-    async showSingleBranchOrganization () {
-      try {
-        const res = await showSingleBranchOrganization({
-          id: this.id
-        })
-        const {
-          form: { setFieldsValue },
-          $refs: {
-            country: { handleBackCity }
-          }
-        } = this
-        const {
-          code,
-          data: {
-            area,
-            phone,
-            faxNum,
-            organizationLogo,
-            organizationName,
-            detailedArea,
-            email,
-            branchType,
-            auditStatus,
-            rejectDescribe
-          }
-        } = res
-        if (code === 200) {
-          this.uploadInfo.showOffList = this.backupImg(organizationLogo)
-          this.subBtnVisible = auditStatus !== 1
-          this.examineState = auditStatus
-          this.rejectReason = rejectDescribe
-          handleBackCity(area)
+		this.logoUrl = logoUrl
+		this.id = id
+		this.companyUrl = JSON.parse(Vue.ls.get('ROLESINFO')).companyUrl
+		showBranchAttributes()
+		showSingleBranchOrganization()
+	},
+	methods: {
+		async showSingleBranchOrganization() {
+			try {
+				const res = await showSingleBranchOrganization({
+					id: this.id
+				})
+				const {
+					form: { setFieldsValue },
+					$refs: {
+						country: { handleBackCity }
+					}
+				} = this
+				const {
+					code,
+					data: {
+						area,
+						phone,
+						faxNum,
+						organizationLogo,
+						organizationName,
+						detailedArea,
+						email,
+						branchType,
+						auditStatus,
+						rejectDescribe
+					}
+				} = res
+				if (code === 200) {
+					this.uploadInfo.showOffList = this.backupImg(organizationLogo)
+					this.subBtnVisible = auditStatus !== 1
+					this.examineState = auditStatus
+					this.rejectReason = rejectDescribe
+					handleBackCity(area)
 
-          setFieldsValue({
-            branchName: organizationName,
-            branchAddress: detailedArea,
-            phone: phone,
-            fax: faxNum,
-            branchEmail: email,
-            branchAttr: branchType
-          })
-        } else {
-          throw new Error(res.msg)
-        }
-      } catch ({ message }) {
-        this.$notification.error({
-          message: message || '网络故障，请重试！'
-        })
-      }
-    },
-    async showBranchAttributes () {
-      try {
-        const res = await showBranchAttributes()
-        const { code, data, msg } = res
-        if (code === 200) {
-          this.branchList = data
-        } else {
-          throw new Error(msg)
-        }
-      } catch ({ message }) {
-        this.$notification.error({
-          message: message || '网络故障，请重试！'
-        })
-      }
-    },
-    backupStr (str, type) {
-      this[type] = str.split('-')
-    },
-    backupImg (url) {
-      let arr = url.split(';')
-      return {
-        winPath: arr[0],
-        fileUrl: arr[1]
-      }
-    },
-    // 处理时间
-    _handlePtime (value) {
-      if (!value) return
-      return moment(value).format('YYYY-MM-DD')
-    },
-    // 预览照片 - 打开
-    handlePreviewImg (file) {
-      this.modalInfo = {
-        title: '查看大图',
-        src: file.url || file.thumbUrl || file.winPath,
-        previewVisible: true
-      }
-    },
-    // 头像/背景 - 上传
-    handleUploadChange ({ fileList }, type) {
-      this.uploadInfo.fileList = fileList
-    },
-    async handleDeleteUpload (item) {
-      let res = await removeBranchOrganizationHead({
-        fileUrl: item,
-        id: this.id
-      })
-      if (res.code === 200) {
-        this.uploadInfo.showOffList = {}
-      } else {
-        this.$notification.error({
-          message: res.msg || '删除失败，请重试！'
-        })
-      }
-    },
-    // 头像/背景 - 移除
-    async handleRemoveUpload (
-      {
-        response: {
-          data: { fileUrl }
-        }
-      },
-      type
-    ) {
-      let res = await removeBranchOrganizationHead({
-        fileUrl,
-        id: this.id
-      })
-      if (res.code === 200) {
-        this.uploadInfo.fileList = []
-        this.uploadInfo.showOffList = []
-      } else {
-        this.$notification.error({
-          message: res.msg || '删除失败，请重试！'
-        })
-      }
-    },
-    // 按钮组 - 重置
-    handleReset () {
-      const {
-        form: { setFieldsValue },
-        uploadInfo: { fileList },
-        $refs: {
-          country: { handleResetCountry }
-        },
-        handleRemoveUpload
-      } = this
-      if (fileList.length) handleRemoveUpload(fileList[0])
-      handleResetCountry()
-      setFieldsValue({
-        branchName: undefined,
-        branchAddress: undefined,
-        phoneF: undefined,
-        phoneS: undefined,
-        phoneT: undefined,
-        faxF: undefined,
-        faxS: undefined,
-        faxT: undefined,
-        branchEmail: undefined,
-        branchAttr: undefined
-      })
-    },
-    handleImgUrl () {
-      const { uploadInfo } = this
-      let organizationLogo = ''
-      if (uploadInfo.fileList.length && uploadInfo.fileList[0].response) {
-        organizationLogo = `${uploadInfo.fileList[0].response.data.winPath};${uploadInfo.fileList[0].response.data.fileUrl}`
-      } else if (uploadInfo.showOffList.winPath) {
-        organizationLogo = `${uploadInfo.showOffList.winPath};${uploadInfo.showOffList.fileUrl}`
-      } else {
-        organizationLogo = ''
-      }
-      return { organizationLogo }
-    },
-    // 按钮组 - 提交
-    handleSubmit () {
-      const {
-        uploadInfo: { fileList, showOffList },
-        form: { getFieldsValue, validateFields },
-        $refs: {
-          country: { city, countryName }
-        },
-        $notification: { error, success }
-      } = this
-      const formObj = getFieldsValue([
-        'branchName',
-        'branchAddress',
-        'phone',
-        'fax',
-        'branchEmail',
-        'branchAttr'
-      ])
+					setFieldsValue({
+						branchName: organizationName,
+						branchAddress: detailedArea,
+						phone: phone,
+						fax: faxNum,
+						branchEmail: email,
+						branchAttr: branchType
+					})
+				} else {
+					throw new Error(res.msg)
+				}
+			} catch ({ message }) {
+				this.$notification.error({
+					message: message || '网络故障，请重试！'
+				})
+			}
+		},
+		async showBranchAttributes() {
+			try {
+				const res = await showBranchAttributes()
+				const { code, data, msg } = res
+				if (code === 200) {
+					this.branchList = data
+				} else {
+					throw new Error(msg)
+				}
+			} catch ({ message }) {
+				this.$notification.error({
+					message: message || '网络故障，请重试！'
+				})
+			}
+		},
+		backupStr(str, type) {
+			this[type] = str.split('-')
+		},
+		backupImg(url) {
+			let arr = url.split(';')
+			return {
+				winPath: arr[0],
+				fileUrl: arr[1]
+			}
+		},
+		// 处理时间
+		_handlePtime(value) {
+			if (!value) return
+			return moment(value).format('YYYY-MM-DD')
+		},
+		// 预览照片 - 打开
+		handlePreviewImg(file) {
+			this.modalInfo = {
+				title: '查看大图',
+				src: file.url || file.thumbUrl || file.winPath,
+				previewVisible: true
+			}
+		},
+		// 头像/背景 - 上传
+		handleUploadChange({ fileList }, type) {
+			this.uploadInfo.fileList = fileList
+		},
+		async handleDeleteUpload(item) {
+			let res = await removeBranchOrganizationHead({
+				fileUrl: item,
+				id: this.id
+			})
+			if (res.code === 200) {
+				this.uploadInfo.showOffList = {}
+			} else {
+				this.$notification.error({
+					message: res.msg || '删除失败，请重试！'
+				})
+			}
+		},
+		// 头像/背景 - 移除
+		async handleRemoveUpload(
+			{
+				response: {
+					data: { fileUrl }
+				}
+			},
+			type
+		) {
+			let res = await removeBranchOrganizationHead({
+				fileUrl,
+				id: this.id
+			})
+			if (res.code === 200) {
+				this.uploadInfo.fileList = []
+				this.uploadInfo.showOffList = []
+			} else {
+				this.$notification.error({
+					message: res.msg || '删除失败，请重试！'
+				})
+			}
+		},
+		// 按钮组 - 重置
+		handleReset() {
+			const {
+				form: { setFieldsValue },
+				uploadInfo: { fileList },
+				$refs: {
+					country: { handleResetCountry }
+				},
+				handleRemoveUpload
+			} = this
+			if (fileList.length) handleRemoveUpload(fileList[0])
+			handleResetCountry()
+			setFieldsValue({
+				branchName: undefined,
+				branchAddress: undefined,
+				phoneF: undefined,
+				phoneS: undefined,
+				phoneT: undefined,
+				faxF: undefined,
+				faxS: undefined,
+				faxT: undefined,
+				branchEmail: undefined,
+				branchAttr: undefined
+			})
+		},
+		handleImgUrl() {
+			const { uploadInfo } = this
+			let organizationLogo = ''
+			if (uploadInfo.fileList.length && uploadInfo.fileList[0].response) {
+				organizationLogo = `${uploadInfo.fileList[0].response.data.winPath};${uploadInfo.fileList[0].response.data.fileUrl}`
+			} else if (uploadInfo.showOffList.winPath) {
+				organizationLogo = `${uploadInfo.showOffList.winPath};${uploadInfo.showOffList.fileUrl}`
+			} else {
+				organizationLogo = ''
+			}
+			return { organizationLogo }
+		},
+		// 按钮组 - 提交
+		handleSubmit() {
+			const {
+				uploadInfo: { fileList, showOffList },
+				form: { getFieldsValue, validateFields },
+				$refs: {
+					country: { city, countryName }
+				},
+				$notification: { error, success }
+			} = this
+			const formObj = getFieldsValue([
+				'branchName',
+				'branchAddress',
+				'phone',
+				'fax',
+				'branchEmail',
+				'branchAttr'
+			])
 
-      // if (!fileList.length && !showOffList.winPath) {
-      //   error({
-      //     message: '请上传LOGO'
-      //   })
-      //   return
-      // }
-      if (!countryName) {
-        error({
-          message: '请选择国家！'
-        })
-        return
-      }
-      if (countryName === '中国' && !city) {
-        error({
-          message: '请选择具体城市！'
-        })
-        return
-      }
-      let area = ''
-      if (countryName !== '中国') {
-        area = countryName
-      } else {
-        area = city === '' ? `${countryName}` : `${countryName}-${city}`
-      }
+			// if (!fileList.length && !showOffList.winPath) {
+			//   error({
+			//     message: '请上传LOGO'
+			//   })
+			//   return
+			// }
+			if (!countryName) {
+				error({
+					message: '请选择国家！'
+				})
+				return
+			}
+			if (countryName === '中国' && !city) {
+				error({
+					message: '请选择具体城市！'
+				})
+				return
+			}
+			let area = ''
+			if (countryName !== '中国') {
+				area = countryName
+			} else {
+				area = city === '' ? `${countryName}` : `${countryName}-${city}`
+			}
 
-      const { organizationLogo } = this.handleImgUrl()
+			const { organizationLogo } = this.handleImgUrl()
 
-      let param = {
-        id: this.id,
-        organizationLogo: organizationLogo,
-        organizationName: formObj.branchName,
-        area,
-        detailedArea: formObj.branchAddress,
-        phone: formObj.phone,
-        faxNum: formObj.fax,
-        email: formObj.branchEmail,
-        branchType: formObj.branchAttr,
-        creater: JSON.parse(Vue.ls.get('USERINFO')).username
-      }
-      validateFields(
-        ['branchName', 'branchAddress', 'phone', 'branchAttr'],
-        async err => {
-          if (!err) {
-            const res = await eidtBranchOrganization(param)
-            const { code, data, msg } = res
-            if (code === 200) {
-              success({
-                message: msg || '提交成功!'
-              })
-              this.$router.push('/branches')
-            } else {
-              error({
-                message: msg || '提交失败，请重试'
-              })
-            }
-          }
-        }
-      )
-    },
-    // 按钮组 - 返回
-    handleBack () {
-      this.$router.push('/branches')
-    }
-  }
+			let param = {
+				id: this.id,
+				organizationLogo: organizationLogo,
+				organizationName: formObj.branchName,
+				area,
+				detailedArea: formObj.branchAddress,
+				phone: formObj.phone,
+				faxNum: formObj.fax,
+				email: formObj.branchEmail,
+				branchType: formObj.branchAttr,
+				creater: JSON.parse(Vue.ls.get('USERINFO')).username
+			}
+			validateFields(
+				['branchName', 'branchAddress', 'phone', 'branchAttr'],
+				async err => {
+					if (!err) {
+						const res = await eidtBranchOrganization(param)
+						const { code, data, msg } = res
+						if (code === 200) {
+							success({
+								message: msg || '提交成功!'
+							})
+							this.$router.push('/branches')
+						} else {
+							error({
+								message: msg || '提交失败，请重试'
+							})
+						}
+					}
+				}
+			)
+		},
+		// 按钮组 - 返回
+		handleBack() {
+			this.$router.push('/branches')
+		}
+	}
 }
 </script>
 
 <style lang="less">
 .EditConsultantWrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	position: relative;
 	.disableMask {
 		position: absolute;

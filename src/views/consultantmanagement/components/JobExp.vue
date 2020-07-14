@@ -17,12 +17,14 @@
 			</a-form-item>
 			<a-form-item label="在职时间："
 				:label-col="{ span: 2 }"
-				:wrapper-col="{ span: 12 }">
-				<a-range-picker v-model="item.jobExpRange"
-					@change="(date, dateString)=>handleJobRangeChange(date, dateString, item)"
-					style="margin-right:10px" />
-				<a-checkbox :checked="item.isNow"
-					@change="e=>item.isNow = e.target.checked">至今</a-checkbox>
+				:wrapper-col="{ span: 22 }">
+				<a-date-picker v-model="item.join" />
+				至
+				<a-date-picker v-model="item.left"
+					:disabled="item.isNow" />
+				<a-checkbox style="margin-left:10px"
+					:checked="item.isNow"
+					@change="e=>handleCheck(e,item)">至今</a-checkbox>
 			</a-form-item>
 			<a-form-item label="职位名称："
 				:label-col="{ span: 2 }"
@@ -51,8 +53,8 @@
 export default {
   props: ['consultantCompanyExp', 'consultantCompanyExpNum'],
   methods: {
-    handleJobRangeChange (date, dateString, item) {
-      this.$emit('handleJobRangeChange', date, dateString, item)
+    handleJobRangeChange (date, dateString, item, type) {
+      this.$emit('handleJobRangeChange', date, dateString, item, type)
     },
     handleSaveJobExp (item) {
       this.$emit('handleSaveJobExp', item)
@@ -62,6 +64,10 @@ export default {
     },
     handleDelConsultantCompanyExp () {
       this.$emit('handleDelConsultantCompanyExp')
+    },
+    handleCheck (e, item) {
+      item.isNow = e.target.checked
+      item.left = undefined
     }
   }
 }

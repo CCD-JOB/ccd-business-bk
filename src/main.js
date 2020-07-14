@@ -16,6 +16,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import preview from 'vue-photo-preview'
 import 'vue-photo-preview/dist/skin.css'
 import './auth'
+import '@/assets/common/styles/font.css'
 
 let options = {
   fullscreenEl: false,

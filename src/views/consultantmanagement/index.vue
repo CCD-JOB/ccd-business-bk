@@ -299,7 +299,7 @@ export default {
 
 <style lang="less" scoped>
 .consultantManagementWrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	h1 {
 		font-size: 20px;
 		font-weight: bold;

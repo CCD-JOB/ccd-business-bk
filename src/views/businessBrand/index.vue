@@ -690,7 +690,7 @@ export default {
 
 <style lang="less">
 .businessBrandWrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	position: relative;
 	.disableMask {
 		position: absolute;

@@ -47,7 +47,9 @@ export default {
       const regp = /,|;/
       const bool = regp.test(file.name)
       if (bool) {
-        this.$message.error('图片名称请不要带有 , 或者 ;特殊字符')
+        this.$notification.error({
+          message: '图片名称请不要带有 , 或者 ;特殊字符'
+        })
         return false
       }
       const isJPG =
@@ -56,11 +58,15 @@ export default {
 				file.type === 'image/gif' ||
 				file.type === 'image/jpg'
       if (!isJPG) {
-        this.$message.error('只能上传 jpg/jpeg/png/gif 格式的图片')
+        this.$notification.error({
+          message: '只能上传 jpg/jpeg/png/gif 格式的图片'
+        })
       }
       const isLt1M = file.size / 1024 / 1024 < 1
       if (!isLt1M) {
-        this.$message.error('图片必须小于1M!')
+        this.$notification.error({
+          message: '图片必须小于1M'
+        })
       }
       return isJPG && isLt1M
     },

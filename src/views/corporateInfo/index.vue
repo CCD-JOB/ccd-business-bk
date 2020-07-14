@@ -414,7 +414,8 @@ export default {
       let Expression = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
       let objExp = new RegExp(Expression)
       if (objExp.test(str) !== true) {
-        callback('请输入 http(s):// 开头的正确网址！')
+        // eslint-disable-next-line
+				callback('请输入 http(s):// 开头的正确网址！')
       }
       callback()
     },
@@ -496,7 +497,7 @@ export default {
 
 <style lang="less">
 .corporateInfoWrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	position: relative;
 	.disableMask {
 		position: absolute;

@@ -22,7 +22,6 @@ export default {
 <style>
 #app {
 	height: 100%;
-	min-width: 1400px;
 }
 .ant-table-tbody > tr > td {
 	word-break: break-all;

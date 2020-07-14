@@ -91,7 +91,9 @@ export default {
       const regp = /,|;/
       const bool = regp.test(file.name)
       if (bool) {
-        this.$message.error('图片名称请不要带有 , 或者 ;特殊字符')
+        this.$notification.error({
+          message: '图片名称请不要带有 , 或者 ;特殊字符'
+        })
         return false
       }
       this.$emit('beforeUpload', [...this.uploadInfo.fileList, file])

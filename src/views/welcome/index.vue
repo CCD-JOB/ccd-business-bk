@@ -12,20 +12,20 @@
 <script>
 import Vue from 'vue'
 export default {
-  data () {
-    return {
-      name: ''
-    }
-  },
-  created () {
-    this.name = JSON.parse(Vue.ls.get('ROLESINFO')).bizName
-  }
+	data() {
+		return {
+			name: ''
+		}
+	},
+	created() {
+		this.name = JSON.parse(Vue.ls.get('ROLESINFO')).bizName
+	}
 }
 </script>
 
 <style lang="less" scoped>
 .welcome-wrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	.radio {
 		border: 1px solid red;
 		padding: 10px;

@@ -64,7 +64,7 @@ export default {
 			border-radius: 4px;
 			width: 184px;
 			img {
-				width: 184px;
+				width: 166px;
 				height: 86px;
 			}
 			.name {

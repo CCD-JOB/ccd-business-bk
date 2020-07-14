@@ -83,7 +83,7 @@
 					</a-radio-group>
 				</a-form-item>
 				<phone-arr-s labelTitle="顾问电话"
-					:isRequired="true"
+					:isRequired="false"
 					:mobileNumArr="mobileNumArr"
 					:mobileNum="mobileNum"
 					@handleAddPhone="handleAddPhone"
@@ -156,7 +156,6 @@
 				</a-form-item>
 				<job-exp :consultantCompanyExpNum="consultantCompanyExpNum"
 					:consultantCompanyExp="consultantCompanyExp"
-					@handleJobRangeChange="handleJobRangeChange"
 					@handleSaveJobExp="handleSaveJobExp"
 					@handleAddConsultantCompanyExp="handleAddConsultantCompanyExp"
 					@handleDelConsultantCompanyExp="handleDelConsultantCompanyExp"></job-exp>
@@ -275,11 +274,10 @@ export default {
         {
           id: '',
           name: '',
-          join: '',
-          left: '',
+          join: undefined,
+          left: undefined,
           position: '',
-          isNow: false,
-          jobExpRange: []
+          isNow: false
         }
       ],
       uploadInfo: {
@@ -496,22 +494,20 @@ export default {
           {
             id: '',
             name: '',
-            join: '',
-            left: '',
+            join: undefined,
+            left: undefined,
             position: '',
-            isNow: false,
-            jobExpRange: []
+            isNow: false
           }
         ]
       }
       this.consultantCompanyExpNum = data.length - 1
       data.map(item => {
         item.name = item.companyName
-        item.join = item.startTime
-        item.left = item.endTime
+        item.join = moment(item.startTime)
+        item.left = moment(item.endTime)
         item.position = item.positionName
         item.isNow = Boolean(item.upToNow)
-        item.jobExpRange = [moment(item.startTime), moment(item.endTime)]
       })
       return data
     },
@@ -541,7 +537,9 @@ export default {
       const regp = /,|;/
       const bool = regp.test(arr[0].name)
       if (bool) {
-        this.$message.error('图片名称请不要带有 , 或者 ;特殊字符')
+        this.$notification.error({
+          message: '图片名称请不要带有 , 或者 ;特殊字符'
+        })
         return false
       }
       this.uploadInfo.fileList = arr
@@ -817,10 +815,16 @@ export default {
       let obj = this.consultantCompanyExp[this.consultantCompanyExpNum]
       if (
         obj.name === '' ||
-				obj.join === '' ||
-				obj.left === '' ||
+				obj.join === undefined ||
+				obj.join === null ||
 				obj.position === ''
       ) {
+        this.$notification.error({
+          message: '请先补全工作经历！'
+        })
+        return
+      }
+      if ((obj.left === undefined || obj.left === null) && !obj.isNow) {
         this.$notification.error({
           message: '请先补全工作经历！'
         })
@@ -836,8 +840,8 @@ export default {
       this.consultantCompanyExp.push({
         id: '',
         name: '',
-        join: '',
-        left: '',
+        join: undefined,
+        left: undefined,
         position: '',
         isNow: false
       })
@@ -846,8 +850,8 @@ export default {
     async handleSaveJobExp (item) {
       if (
         item.name === '' ||
-				item.join === '' ||
-				item.left === '' ||
+				item.join === undefined ||
+				item.join === null ||
 				item.position === ''
       ) {
         this.$notification.error({
@@ -855,55 +859,42 @@ export default {
         })
         return
       }
-      if (item.id !== '') {
-        let param = {
-          id: item.id,
-          companyName: item.name,
-          startTime: item.join,
-          endTime: item.left,
-          positionName: item.position,
-          upToNow: +item.isNow
+      if ((item.left === undefined || item.left === null) && !item.isNow) {
+        this.$notification.error({
+          message: '单条工作经历请填写完整！'
+        })
+        return
+      }
+      let param = {
+        id: item.id !== '' ? item.id : this.consultantId,
+        companyName: item.name,
+        startTime: moment(item.join).format('YYYY-MM-DD'),
+        endTime: moment(item.left).format('YYYY-MM-DD'),
+        positionName: item.position,
+        upToNow: +item.isNow
+      }
+      try {
+        let res
+        if (item.id !== '') {
+          param.id = item.id
+          res = await editWorkExperience(param)
+        } else {
+          param.adviserId = this.consultantId
+          res = await addWorkExperience(param)
         }
-        try {
-          const res = await editWorkExperience(param)
-          const { code, data, msg } = res
-          if (code === 200) {
-            this.$notification.success({
-              message: res.msg || '更新成功！'
-            })
-          } else {
-            throw new Error(msg)
-          }
-        } catch ({ message }) {
-          this.$notification.error({
-            message: message || '网络故障，请重试！'
+        const { code, data, msg } = res
+        if (code === 200) {
+          if (item.id === '') item.id = data
+          this.$notification.success({
+            message: msg || '保存成功！'
           })
+        } else {
+          throw new Error(msg)
         }
-      } else {
-        let param = {
-          adviserId: this.consultantId,
-          companyName: item.name,
-          startTime: item.join,
-          endTime: item.left,
-          positionName: item.position,
-          upToNow: +item.isNow
-        }
-        try {
-          const res = await addWorkExperience(param)
-          const { code, data, msg } = res
-          if (code === 200) {
-            item.id = res.data
-            this.$notification.success({
-              message: res.msg || '保存成功！'
-            })
-          } else {
-            throw new Error(msg)
-          }
-        } catch ({ message }) {
-          this.$notification.error({
-            message: message || '网络故障，请重试！'
-          })
-        }
+      } catch ({ message }) {
+        this.$notification.error({
+          message: message || '网络故障，请重试！'
+        })
       }
     },
     // 工作经历 - 删除
@@ -937,12 +928,6 @@ export default {
     _handlePtime (value) {
       if (!value) return
       return moment(value).format('YYYY-MM-DD')
-    },
-    // 工作日期修改
-    handleJobRangeChange (date, dateString, item) {
-      item.join = dateString[0]
-      item.left = dateString[1]
-      item.jobExpRange = date
     },
     // 学校日期修改
     handleSchoolRangeChange (date, dateString) {
@@ -1178,7 +1163,7 @@ export default {
 
 <style lang="less">
 .EditConsultantWrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	position: relative;
 	.disableMask {
 		position: absolute;
@@ -1326,56 +1311,56 @@ export default {
 				}
 			}
 		}
-		.imgUpWrapper {
-			margin: 0;
-			padding: 0;
-			li {
-				position: relative;
-				list-style: none;
-				margin: 0;
-				padding: 8px;
-				float: left;
-				margin-right: 10px;
-				border: 1px solid #d9d9d9;
-				border-radius: 4px;
-				img {
-					width: 184px;
-					height: 86px;
-				}
-				.mask {
-					position: absolute;
-					top: 8px;
-					left: 8px;
-					right: 8px;
-					bottom: 8px;
-					background: rgba(0, 0, 0, 0.6);
-					display: none;
-					align-items: center;
-					justify-content: center;
-					i {
-						font-size: 18px;
-						color: #fff;
-						margin: 0 3px;
-					}
-				}
-				&:hover {
-					.mask {
-						display: flex;
-					}
-				}
-				&.uploadBtnWrapper {
-					width: 200px;
-					height: 104px;
-					display: table-cell;
-					text-align: center;
-					vertical-align: middle;
-					padding: 8px;
-					border: 1px dashed #d9d9d9;
-					background-color: #fafafa;
-					border-radius: 4px;
-				}
-			}
-		}
+		// .imgUpWrapper {
+		// 	margin: 0;
+		// 	padding: 0;
+		// 	li {
+		// 		position: relative;
+		// 		list-style: none;
+		// 		margin: 0;
+		// 		padding: 8px;
+		// 		float: left;
+		// 		margin-right: 10px;
+		// 		border: 1px solid #d9d9d9;
+		// 		border-radius: 4px;
+		// 		img {
+		// 			width: 184px;
+		// 			height: 86px;
+		// 		}
+		// 		.mask {
+		// 			position: absolute;
+		// 			top: 8px;
+		// 			left: 8px;
+		// 			right: 8px;
+		// 			bottom: 8px;
+		// 			background: rgba(0, 0, 0, 0.6);
+		// 			display: none;
+		// 			align-items: center;
+		// 			justify-content: center;
+		// 			i {
+		// 				font-size: 18px;
+		// 				color: #fff;
+		// 				margin: 0 3px;
+		// 			}
+		// 		}
+		// 		&:hover {
+		// 			.mask {
+		// 				display: flex;
+		// 			}
+		// 		}
+		// 		&.uploadBtnWrapper {
+		// 			width: 200px;
+		// 			height: 104px;
+		// 			display: table-cell;
+		// 			text-align: center;
+		// 			vertical-align: middle;
+		// 			padding: 8px;
+		// 			border: 1px dashed #d9d9d9;
+		// 			background-color: #fafafa;
+		// 			border-radius: 4px;
+		// 		}
+		// 	}
+		// }
 
 		.imgUploaderWrapper {
 			.ant-form-item-label {

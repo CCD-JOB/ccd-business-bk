@@ -77,7 +77,7 @@
 					</a-radio-group>
 				</a-form-item>
 				<phone-arr-s labelTitle="顾问电话"
-					:isRequired="true"
+					:isRequired="false"
 					:mobileNumArr="mobileNumArr"
 					:mobileNum="mobileNum"
 					@handleAddPhone="handleAddPhone"
@@ -94,9 +94,9 @@
 						:autosize="{ minRows: 2, maxRows: 6 }"
 						maxLength="300"
 						v-decorator="[
-          'consultantIntroduce',
-          {rules: [{ required: true, message: '请输入个人简介！', trigger: 'change' }]}
-        ]"
+							'consultantIntroduce',
+							{rules: [{ required: true, message: '请输入个人简介！', trigger: 'change' }]}
+						]"
 						@change="e => handleIntroduceInput(e)" />
 					<p class="tip">已填写{{hasInput}} / 300 字</p>
 				</a-form-item>
@@ -150,7 +150,6 @@
 				</a-form-item>
 				<job-exp :consultantCompanyExpNum="consultantCompanyExpNum"
 					:consultantCompanyExp="consultantCompanyExp"
-					@handleJobRangeChange="handleJobRangeChange"
 					@handleSaveJobExp="handleSaveJobExp"
 					@handleAddConsultantCompanyExp="handleAddConsultantCompanyExp"
 					@handleDelConsultantCompanyExp="handleDelConsultantCompanyExp">
@@ -260,8 +259,8 @@ export default {
         {
           id: '',
           name: '',
-          join: '',
-          left: '',
+          join: undefined,
+          left: undefined,
           position: '',
           isNow: false
         }
@@ -373,7 +372,9 @@ export default {
       const regp = /,|;/
       const bool = regp.test(arr[0].name)
       if (bool) {
-        this.$message.error('图片名称请不要带有 , 或者 ;特殊字符')
+        this.$notification.error({
+          message: '图片名称请不要带有 , 或者 ;特殊字符'
+        })
         return false
       }
       this.uploadInfo.fileList = arr
@@ -602,10 +603,16 @@ export default {
       let obj = this.consultantCompanyExp[this.consultantCompanyExpNum]
       if (
         obj.name === '' ||
-				obj.join === '' ||
-				obj.left === '' ||
+				obj.join === undefined ||
+				obj.join === null ||
 				obj.position === ''
       ) {
+        this.$notification.error({
+          message: '请先补全工作经历！'
+        })
+        return
+      }
+      if ((obj.left === undefined || obj.left === null) && !obj.isNow) {
         this.$notification.error({
           message: '请先补全工作经历！'
         })
@@ -621,8 +628,8 @@ export default {
       this.consultantCompanyExp.push({
         id: '',
         name: '',
-        join: '',
-        left: '',
+        join: undefined,
+        left: undefined,
         position: '',
         isNow: false
       })
@@ -631,8 +638,8 @@ export default {
     async handleSaveJobExp (item) {
       if (
         item.name === '' ||
-				item.join === '' ||
-				item.left === '' ||
+				item.join === undefined ||
+				item.join === null ||
 				item.position === ''
       ) {
         this.$notification.error({
@@ -640,53 +647,41 @@ export default {
         })
         return
       }
-      if (item.id !== '') {
-        let param = {
-          id: item.id,
-          companyName: item.name,
-          startTime: item.join,
-          endTime: item.left,
-          positionName: item.position,
-          upToNow: +item.isNow
+      if ((item.left === undefined || item.left === null) && !item.isNow) {
+        this.$notification.error({
+          message: '单条工作经历请填写完整！'
+        })
+        return
+      }
+      let param = {
+        companyName: item.name,
+        startTime: moment(item.join).format('YYYY-MM-DD'),
+        endTime: moment(item.left).format('YYYY-MM-DD'),
+        positionName: item.position,
+        upToNow: +item.isNow
+      }
+      try {
+        let res
+        if (item.id !== '') {
+          param.id = item.id
+          res = await editWorkExperience(param)
+        } else {
+          param.adviserId = this.consultantId
+          res = await addWorkExperience(param)
         }
-        try {
-          let res = await editWorkExperience(param)
-          if (res.code === 200) {
-            this.$notification.success({
-              message: res.msg || '更新成功！'
-            })
-          } else {
-            throw new Error(res.msg)
-          }
-        } catch ({ message }) {
-          this.$notification.error({
-            message: message || '网络故障，请重试！'
+        const { code, data, msg } = res
+        if (code === 200) {
+          if (item.id === '') item.id = data
+          this.$notification.success({
+            message: msg || '保存成功！'
           })
+        } else {
+          throw new Error(msg)
         }
-      } else {
-        let param = {
-          adviserId: this.consultantId,
-          companyName: item.name,
-          startTime: item.join,
-          endTime: item.left,
-          positionName: item.position,
-          upToNow: +item.isNow
-        }
-        try {
-          let res = await addWorkExperience(param)
-          if (res.code === 200) {
-            item.id = res.data
-            this.$notification.success({
-              message: res.msg || '保存成功！'
-            })
-          } else {
-            throw new Error(res.msg)
-          }
-        } catch ({ message }) {
-          this.$notification.error({
-            message: message || '网络故障，请重试！'
-          })
-        }
+      } catch ({ message }) {
+        this.$notification.error({
+          message: message || '网络故障，请重试！'
+        })
       }
     },
     // 工作经历 - 删除
@@ -710,11 +705,6 @@ export default {
         this.consultantCompanyExpNum--
         this.consultantCompanyExp.pop()
       }
-    },
-    // 工作经历 - 日期修改
-    handleJobRangeChange (date, dateString, item) {
-      item.join = dateString[0]
-      item.left = dateString[1]
     },
     // 学校日期修改
     handleSchoolRangeChange (date, dateString) {
@@ -964,7 +954,7 @@ export default {
 
 <style lang="less">
 .AddConsultantWrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	h1 {
 		font-size: 20px;
 		font-weight: bold;

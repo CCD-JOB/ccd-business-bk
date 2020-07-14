@@ -25,7 +25,7 @@
 							<p style="color:red;margin:0;">图片尺寸：152*152</p>
 						</div>
 						<div>
-							<single-img-upload title="上传办公地点图片"
+							<single-img-upload title="上传背景图片"
 								:actionUrl="`${uploadUrl}?dic=0`"
 								:uploadInfo="uploadLocInfo"
 								@handlePreviewImg="handlePreviewImg"
@@ -831,7 +831,7 @@ export default {
 
 <style lang="less">
 .projectBrandWrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	position: relative;
 	.disableMask {
 		position: absolute;

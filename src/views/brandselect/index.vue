@@ -65,6 +65,9 @@
 					</a-row>
 				</div>
 			</div>
+			<div class="containerBack">
+				<a-button @click="handleBack">退出登录</a-button>
+			</div>
 			<div class="containerBottom">
 				<h1>上海才查到科技有限公司</h1>
 				<div class="copyright">
@@ -127,6 +130,11 @@ export default {
         replace: true,
         query: { name: bizName }
       })
+    },
+    handleBack () {
+      this.LogOff({}).then(() => {
+        window.location.reload()
+      })
     }
   }
 }
@@ -134,7 +142,7 @@ export default {
 
 <style lang="less" >
 #brandSelect.brand-select-wrapper {
-	min-width: 1200px;
+	// min-width: 1200px;
 	height: 100%;
 	.container {
 		width: 100%;
@@ -253,7 +261,18 @@ export default {
 		}
 	}
 }
-
+.containerBack {
+	text-align: center;
+	position: absolute;
+	width: 100%;
+	bottom: 90px;
+	.ant-btn {
+		color: #333333;
+		padding: 0 80px;
+		height: 40px;
+		border-radius: 66px;
+	}
+}
 .containerBottom {
 	position: absolute;
 	width: 100%;
