@@ -42,6 +42,16 @@
 							{rules: [{ required: true, message: '请选择活动举办时间!', trigger: 'change',type: 'array' }]}
 						]" />
 				</a-form-item>
+				<a-form-item label="参与人数："
+					:label-col="{ span: 2 }"
+					:wrapper-col="{ span: 12 }">
+					<a-input placeholder="请填写活动参与人数（例如：500）"
+						maxLength="5"
+						style="width:300px;"
+						v-decorator="['activityInNum',
+							{rules: [{ required: true, message: '请填写活动参与人数（例如：500）!' },{validator:checkNum}]}
+						]" />
+				</a-form-item>
 				<a-form-item label="活动地区："
 					:label-col="{ span: 2 }"
 					:wrapper-col="{ span: 12 }">
@@ -61,21 +71,18 @@
 						{rules: [{ required: true, message: '请填写活动主办详细地址!', trigger: 'change' }]}
 					]" />
 				</a-form-item>
-				<a-form-item label="参与人数："
+				<!-- <a-form-item label="在线报名："
 					:label-col="{ span: 2 }"
 					:wrapper-col="{ span: 12 }">
-					<a-input placeholder="请填写活动参与人数（例如：500）"
-						maxLength="5"
-						style="width:300px;"
-						v-decorator="['activityInNum',
-							{rules: [{ required: true, message: '请填写活动参与人数（例如：500）!' },{validator:checkNum}]}
-						]" />
-				</a-form-item>
+					<a-radio-group v-model="isOnline"
+						:options="plainOptions" />
+				</a-form-item> -->
 				<a-form-item label="截止日期"
 					:label-col="{ span: 2 }"
 					:wrapper-col="{ span: 12 }">
 					<a-date-picker placeholder="请选择活动截止日期"
 						:disabledDate="disabledEndDate"
+						:disabled="isOnline"
 						v-decorator="['activityEndTime',
 							{rules: [{ required: true, message: '请选择活动截止日期!', trigger: 'change',type: 'object' }]}
 						]" />
@@ -144,6 +151,7 @@ export default {
       form: this.$form.createForm(this),
       rejectReason: '',
       examineState: 1,
+      isOnline: 0,
       subBtnVisible: true,
       uploadUrl: {},
       uploadInfo: {

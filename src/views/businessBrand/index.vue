@@ -33,7 +33,7 @@
 								@handleRemoveUpload="files=>handleRemoveUpload(files,'loc')"
 								@handleDeleteUpload="files => handleDeleteUpload(files,'loc')">
 							</single-img-upload>
-							<p style="color:red;margin:0;">图片尺寸：750*532</p>
+							<p style="color:red;margin:0;">图片尺寸：375*303</p>
 						</div>
 					</div>
 					<p style="color:red;margin:0;">图片格式：JPG,JPEG,PNG,GIF(图片大小不超过1MB)</p>

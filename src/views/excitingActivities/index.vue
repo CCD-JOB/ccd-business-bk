@@ -42,6 +42,15 @@
 					slot-scope="text">
 					<span :style="{color:+text === 1 ?'#000':+text===2?'green':'red'}">{{+text === 1 ? '待审核': +text === 2 ? '审核通过':'审核驳回'}}</span>
 				</span>
+				<span slot="isOnline"
+					slot-scope="text">
+					<span>{{text?'不支持':'支持'}}</span>
+				</span>
+				<span slot="closingDate"
+					slot-scope="text,record">
+					<span v-if="record.isOnline === 1">--</span>
+					<span v-else>{{text}}</span>
+				</span>
 				<span slot="valid"
 					slot-scope="text, record">
 					<span :style="{color: record.valid===0?'green':record.valid===1?'red':'#000'}">{{record.valid===0?'运营中':record.valid===1?'已过期':'待运营'}}</span>
@@ -106,259 +115,266 @@
 import Vue from 'vue'
 import { STable } from '@/components'
 import {
-	showActivityInformation,
-	removeActivityInformation,
-	showBespeak,
-	eidtSequence
+  showActivityInformation,
+  removeActivityInformation,
+  showBespeak,
+  eidtSequence
 } from '@/api/excitingActivities'
 
 export default {
-	name: 'excitingWrapper',
-	components: {
-		STable
-	},
-	data() {
-		return {
-			form: this.$form.createForm(this),
-			appointmentVisible: false,
-			appointData: {
-				activityLocation: '',
-				activityTime: '',
-				activityNum: 0,
-				list: []
-			},
-			appointColumns: [
-				{
-					title: '序号',
-					width: '234px',
-					align: 'center',
-					scopedSlots: { customRender: 'serial' }
-				},
-				{
-					title: '姓名',
-					width: '234px',
-					dataIndex: 'name',
-					align: 'center'
-				},
-				{
-					title: '电话',
-					width: '234px',
-					dataIndex: 'phone',
-					align: 'center'
-				},
-				{
-					title: '预约时间',
-					width: '234px',
-					dataIndex: 'bookingTime',
-					align: 'center'
-				}
-			],
-			queryParam: {
-				startPage: 1,
-				pageSize: 10,
-				companyUrl: ''
-			},
-			columns: [
-				{
-					title: '序号',
-					scopedSlots: { customRender: 'serial' }
-				},
-				{
-					title: '地区',
-					dataIndex: 'activityArea',
-					align: 'center'
-				},
-				{
-					title: '活动名称',
-					dataIndex: 'activityName',
-					align: 'center'
-				},
-				{
-					title: '活动地点',
-					width: '234px',
-					dataIndex: 'activityAddress',
-					align: 'center'
-				},
-				{
-					title: '活动日期',
-					dataIndex: 'activityTime',
-					align: 'center',
-					scopedSlots: { customRender: 'activityTime' }
-				},
-				{
-					title: '截止日期',
-					dataIndex: 'closingDate',
-					align: 'center'
-				},
-				{
-					title: '规模人数',
-					dataIndex: 'numberOfParticipants',
-					align: 'center'
-				},
-				{
-					title: '顺序',
-					dataIndex: 'sequence',
-					align: 'center',
-					scopedSlots: { customRender: 'sequence' }
-				},
-				{
-					title: '活动状态',
-					dataIndex: 'valid',
-					align: 'center',
-					scopedSlots: { customRender: 'valid' }
-				},
-				{
-					title: '审核状态',
-					dataIndex: 'approve',
-					align: 'center',
-					scopedSlots: { customRender: 'approve' }
-				},
-				{
-					title: '操作',
-					align: 'center',
-					scopedSlots: { customRender: 'action' }
-				},
-				{
-					title: '活动预约',
-					align: 'center',
-					scopedSlots: { customRender: 'appoint' }
-				}
-			],
-			pagination: {
-				defaultPageSize: 10,
-				showTotal: total => `共 ${total} 条数据`,
-				showSizeChanger: true,
-				pageSizeOptions: ['5', '10', '15', '20'],
-				onShowSizeChange: (current, pageSize) =>
-					(this.queryParam.pageSize = pageSize),
-				onChange: page => (this.queryParam.startPage = page),
-				showQuickJumper: true
-			},
-			loadData: () => {
-				return showActivityInformation(this.queryParam).then(res => {
-					if (res.code === 200 && res.data) {
-						if (res.data.pageNum > res.data.navigateLastPage) {
-							// 解决当点击的页码超过实际页数重复请求bug
-							this.queryParam.startPage = res.data.navigateLastPage
-						}
-						res.data.data = res.data.list
-						res.data.pageNo = res.data.pageNum
-						res.data.totalPage = res.data.pages
-						res.data.totalCount = res.data.total
+  name: 'excitingWrapper',
+  components: {
+    STable
+  },
+  data () {
+    return {
+      form: this.$form.createForm(this),
+      appointmentVisible: false,
+      appointData: {
+        activityLocation: '',
+        activityTime: '',
+        activityNum: 0,
+        list: []
+      },
+      appointColumns: [
+        {
+          title: '序号',
+          width: '234px',
+          align: 'center',
+          scopedSlots: { customRender: 'serial' }
+        },
+        {
+          title: '姓名',
+          width: '234px',
+          dataIndex: 'name',
+          align: 'center'
+        },
+        {
+          title: '电话',
+          width: '234px',
+          dataIndex: 'phone',
+          align: 'center'
+        },
+        {
+          title: '预约时间',
+          width: '234px',
+          dataIndex: 'bookingTime',
+          align: 'center'
+        }
+      ],
+      queryParam: {
+        startPage: 1,
+        pageSize: 10,
+        companyUrl: ''
+      },
+      columns: [
+        {
+          title: '序号',
+          scopedSlots: { customRender: 'serial' }
+        },
+        {
+          title: '地区',
+          dataIndex: 'activityArea',
+          align: 'center'
+        },
+        {
+          title: '活动名称',
+          dataIndex: 'activityName',
+          align: 'center'
+        },
+        {
+          title: '活动地点',
+          width: '234px',
+          dataIndex: 'activityAddress',
+          align: 'center'
+        },
+        {
+          title: '活动日期',
+          dataIndex: 'activityTime',
+          align: 'center',
+          scopedSlots: { customRender: 'activityTime' }
+        },
+        {
+          title: '在线报名',
+          dataIndex: 'isOnline',
+          align: 'center',
+          scopedSlots: { customRender: 'isOnline' }
+        },
+        {
+          title: '报名截止日期',
+          dataIndex: 'closingDate',
+          align: 'center',
+          scopedSlots: { customRender: 'closingDate' }
+        },
+        {
+          title: '规模人数',
+          dataIndex: 'numberOfParticipants',
+          align: 'center'
+        },
+        {
+          title: '顺序',
+          dataIndex: 'sequence',
+          align: 'center',
+          scopedSlots: { customRender: 'sequence' }
+        },
+        {
+          title: '活动状态',
+          dataIndex: 'valid',
+          align: 'center',
+          scopedSlots: { customRender: 'valid' }
+        },
+        {
+          title: '审核状态',
+          dataIndex: 'approve',
+          align: 'center',
+          scopedSlots: { customRender: 'approve' }
+        },
+        {
+          title: '操作',
+          align: 'center',
+          scopedSlots: { customRender: 'action' }
+        },
+        {
+          title: '活动预约',
+          align: 'center',
+          scopedSlots: { customRender: 'appoint' }
+        }
+      ],
+      pagination: {
+        defaultPageSize: 10,
+        showTotal: total => `共 ${total} 条数据`,
+        showSizeChanger: true,
+        pageSizeOptions: ['5', '10', '15', '20'],
+        onShowSizeChange: (current, pageSize) =>
+          (this.queryParam.pageSize = pageSize),
+        onChange: page => (this.queryParam.startPage = page),
+        showQuickJumper: true
+      },
+      loadData: () => {
+        return showActivityInformation(this.queryParam).then(res => {
+          if (res.code === 200 && res.data) {
+            if (res.data.pageNum > res.data.navigateLastPage) {
+              // 解决当点击的页码超过实际页数重复请求bug
+              this.queryParam.startPage = res.data.navigateLastPage
+            }
+            res.data.data = res.data.list
+            res.data.pageNo = res.data.pageNum
+            res.data.totalPage = res.data.pages
+            res.data.totalCount = res.data.total
 
-						delete res.data.list
-						delete res.data.pageNum
-						delete res.data.pages
-						delete res.data.total
+            delete res.data.list
+            delete res.data.pageNum
+            delete res.data.pages
+            delete res.data.total
 
-						return res.data
-					} else {
-						res.data = {}
-						res.data.data = []
-						res.data.pageNo = 0
-						res.data.totalPage = 0
-						res.data.totalCount = 0
-						return res.data
-					}
-				})
-			}
-		}
-	},
-	created() {
-		this.queryParam.companyUrl = JSON.parse(Vue.ls.get('ROLESINFO')).companyUrl
-	},
-	methods: {
-		async getAppointmentData(id) {
-			try {
-				let res = await showBespeak({
-					id: id
-				})
-				if (res.code === 200) {
-					this.appointData = res.data
-				} else {
-					throw new Error(res.msg)
-				}
-			} catch ({ message }) {
-				this.$notification.error({
-					message: message || '网络故障，请重试！'
-				})
-			}
-		},
-		async handleDel(record) {
-			try {
-				let res = await removeActivityInformation({
-					id: record.id
-				})
-				if (res.code === 200) {
-					this.$notification.success({
-						message: res.msg || '删除成功！'
-					})
-					this.$refs.table.refresh(true)
-				} else {
-					throw new Error(res.msg)
-				}
-			} catch ({ message }) {
-				this.$notification.error({
-					message: message || '网络故障，请重试！'
-				})
-			}
-		},
-		async handleOrder(val, record) {
-			let sequence = ''
-			sequence = val
-			if (val === '默认') {
-				sequence = 99
-			}
-			const param = {
-				id: record.id,
-				sequence
-			}
-			try {
-				const res = await eidtSequence(param)
-				if (res.code === 200) {
-					this.$notification.success({
-						message: res.msg || '排序成功！'
-					})
-				} else {
-					throw new Error(res.msg)
-				}
-			} catch ({ message }) {
-				this.$notification.error({
-					message: message || '排序失败，请重试!'
-				})
-			}
-		},
-		handleCheckAppointor(record) {
-			this.getAppointmentData(record.id)
-			this.appointmentVisible = true
-		},
-		handlePreviewCancel() {
-			this.appointData = {
-				activityLocation: '',
-				activityTime: '',
-				activityNum: 0,
-				list: []
-			}
-			this.appointmentVisible = false
-		},
-		handleAdd() {
-			this.$router.push({
-				name: 'addActivities'
-			})
-		},
-		handleView(record) {
-			this.$router.push({
-				name: 'viewActivities',
-				query: { id: record.id }
-			})
-		},
-		handleEdit(record) {
-			this.$router.push({
-				name: 'editActivities',
-				query: { id: record.id }
-			})
-		}
-	}
+            return res.data
+          } else {
+            res.data = {}
+            res.data.data = []
+            res.data.pageNo = 0
+            res.data.totalPage = 0
+            res.data.totalCount = 0
+            return res.data
+          }
+        })
+      }
+    }
+  },
+  created () {
+    this.queryParam.companyUrl = JSON.parse(Vue.ls.get('ROLESINFO')).companyUrl
+  },
+  methods: {
+    async getAppointmentData (id) {
+      try {
+        let res = await showBespeak({
+          id: id
+        })
+        if (res.code === 200) {
+          this.appointData = res.data
+        } else {
+          throw new Error(res.msg)
+        }
+      } catch ({ message }) {
+        this.$notification.error({
+          message: message || '网络故障，请重试！'
+        })
+      }
+    },
+    async handleDel (record) {
+      try {
+        let res = await removeActivityInformation({
+          id: record.id
+        })
+        if (res.code === 200) {
+          this.$notification.success({
+            message: res.msg || '删除成功！'
+          })
+          this.$refs.table.refresh(true)
+        } else {
+          throw new Error(res.msg)
+        }
+      } catch ({ message }) {
+        this.$notification.error({
+          message: message || '网络故障，请重试！'
+        })
+      }
+    },
+    async handleOrder (val, record) {
+      let sequence = ''
+      sequence = val
+      if (val === '默认') {
+        sequence = 99
+      }
+      const param = {
+        id: record.id,
+        sequence
+      }
+      try {
+        const res = await eidtSequence(param)
+        if (res.code === 200) {
+          this.$notification.success({
+            message: res.msg || '排序成功！'
+          })
+        } else {
+          throw new Error(res.msg)
+        }
+      } catch ({ message }) {
+        this.$notification.error({
+          message: message || '排序失败，请重试!'
+        })
+      }
+    },
+    handleCheckAppointor (record) {
+      this.getAppointmentData(record.id)
+      this.appointmentVisible = true
+    },
+    handlePreviewCancel () {
+      this.appointData = {
+        activityLocation: '',
+        activityTime: '',
+        activityNum: 0,
+        list: []
+      }
+      this.appointmentVisible = false
+    },
+    handleAdd () {
+      this.$router.push({
+        name: 'addActivities'
+      })
+    },
+    handleView (record) {
+      this.$router.push({
+        name: 'viewActivities',
+        query: { id: record.id }
+      })
+    },
+    handleEdit (record) {
+      this.$router.push({
+        name: 'editActivities',
+        query: { id: record.id }
+      })
+    }
+  }
 }
 </script>
 
